@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: order
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG  # 注册中心的统一配置服务应用名
+      profile: dev # 配置环境设置为dev
+      label: main # git分支为默认的main分支
+    bus:
+      id: ${spring.application.name}:${spring.cloud.config.profile}:${random.value}
+
+## 使用bootstrap.yml，使配置中心先启动找到配置文件后再启动数据库，防止启动顺序错误导致的错误
+## 若注册中心不使用默认端口号8761的话，需要在当前这个配置文件中设置新的端口号，否则程序启动后还是会直接使用默认注册中心端口号然后报错
