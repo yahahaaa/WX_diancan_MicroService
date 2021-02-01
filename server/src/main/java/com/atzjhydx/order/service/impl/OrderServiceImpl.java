@@ -2,7 +2,6 @@ package com.atzjhydx.order.service.impl;
 
 import com.atzjhydx.order.dataobject.OrderDetail;
 import com.atzjhydx.order.dataobject.OrderMaster;
-import com.atzjhydx.order.dataobject.ProductInfo;
 import com.atzjhydx.order.dto.OrderDTO;
 import com.atzjhydx.order.enums.OrderStatusEnum;
 import com.atzjhydx.order.enums.PayStatusEnum;
@@ -16,6 +15,7 @@ import com.atzjhydx.product.common.ProductInfoOutput;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -40,6 +40,7 @@ public class OrderServiceImpl implements OrderService {
     private ProductClient productClient;
 
     @Override
+    @Transactional
     public OrderDTO create(OrderDTO orderDTO) {
 
         String orderId = GenKeyId.genUniqueKey();

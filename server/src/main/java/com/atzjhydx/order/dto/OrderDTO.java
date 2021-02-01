@@ -3,6 +3,7 @@ package com.atzjhydx.order.dto;
 import com.atzjhydx.order.dataobject.OrderDetail;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -11,7 +12,9 @@ import java.util.List;
  * @Date 2021/1/26
  **/
 @Data
-public class OrderDTO {
+public class OrderDTO implements Serializable {
+
+    private static final long serialVersionUID = -2158938277381960214L;
 
     private String orderId;
 
