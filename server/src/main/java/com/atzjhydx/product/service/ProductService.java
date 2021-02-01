@@ -13,7 +13,6 @@ public interface ProductService {
     //根据商品Id查询商品列表
     List<ProductInfo> findList(List<String> productIdList);
 
-    //扣减库存
+    //扣减库存后发送消息
     void decreaseStock(List<DecreaseStockInput> cartDTOList);
-
 }
