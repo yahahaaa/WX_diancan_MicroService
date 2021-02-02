@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG
+      profile: dev
+      label: main
+  rabbitmq:
+    host: 192.168.0.106
+    port: 5672
+    username: guest
+    password: guest
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+## 网关相关配置
+## /myProduct/product/list -> /product/product/list
+zuul:
+  routes:
+    myProduct:
+      path: /myProduct/**
+      serviceId: product
+      ## 敏感头过滤为空，防止过滤Cookie
+      sensitiveHeaders:
+    # 上面的简洁写法
+    # product: /myProduct/**
+
+  ## 排除某些路由,使得外部不能访问该uri
+  ignored-patterns:
+    - /**/product/listForOrder
+  ## 忽略全部服务敏感头，都可以传递cookie
+  sensitive-headers:
