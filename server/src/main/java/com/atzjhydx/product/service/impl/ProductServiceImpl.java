@@ -54,9 +54,13 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
+    @Transactional //如果这里不加注解，下面方法中的decreaseStockProcess方法对象和通过AOP动态代理生成的decreaseStockProcess不是一个方法对象，会导致事务不起作用
     public void decreaseStock(List<DecreaseStockInput> cartDTOList) {
 
+        //操作数据库
         List<ProductInfo> productInfoList = decreaseStockProcess(cartDTOList);
+
+        //int a = 10 / 0;
 
         //发送mq消息
         //将productInfo转为productInfoOutput
