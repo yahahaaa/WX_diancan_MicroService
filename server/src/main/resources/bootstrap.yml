@@ -1,21 +1,38 @@
 spring:
   application:
     name: order
+
+  ## 用于定位github配置文件
   cloud:
     config:
       discovery:
         enabled: true
-        ## 通过以下三个属性在git中定位需要的配置文件
-        service-id: CONFIG  # 注册中心的统一配置服务应用名
-      profile: dev # 配置环境设置为dev
-      label: main # git分支为默认的main分支
-    bus: ## 当前版本的小bug
+        service-id: CONFIG  # 配置中心
+      profile: dev # 环境
+      label: main # git分支
+
+    ## 自动刷新配置
+    bus:
       id: ${spring.application.name}:${spring.cloud.config.profile}:${random.value}
+
     stream:
       bindings:
         myMessage:
           group: order # 不论启用多少个实例，将每个实例放入到一个组里，这样发送消息时，stream只会给一个实例发送消息
           content-type: application/json
 
-## 使用bootstrap.yml，使配置中心先启动找到配置文件后再启动数据库，防止启动顺序错误导致的错误
-## 若注册中心不使用默认端口号8761的话，需要在当前这个配置文件中设置新的端口号，否则程序启动后还是会直接使用默认注册中心端口号然后报错
+  ## 服务追踪配置
+  zipkin:
+    base-url: http://192.168.0.102:9411/
+    sender:
+      # 采用HTTP方式将span传输给zipkin，也可采用rabbitmq，可以保证高可用性
+      type: web
+  # 抽样的百分比，默认0.1
+  sleuth:
+    sampler:
+      probability: 1
+
+## 日志权限
+logging:
+  level:
+    org.springframework.cloud.netflix.feign: debug
