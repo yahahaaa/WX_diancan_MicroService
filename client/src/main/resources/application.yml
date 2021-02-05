@@ -1,0 +1,12 @@
+## \u670D\u52A1\u6CE8\u518C,\u4E3A\u5B9E\u73B0\u9AD8\u53EF\u7528\uFF0C\u53EF\u4EE5\u540C\u65F6\u5411\u591A\u4E2A\u6CE8\u518C\u4E2D\u5FC3\u6CE8\u518C
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+#  instance:
+#    hostname: clientName
+
+## \u4FEE\u6539\u5E94\u7528\u540D
+spring:
+  application:
+    name: client

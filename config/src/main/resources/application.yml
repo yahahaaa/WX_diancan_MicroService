@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: config
+  ## main --> branch
+  ## env: dev  ----->  http://localhost:8081/main/order-dev.yml
+  ## env: test  ----->  http://localhost:8081/main/order-test.yml
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Leeeeeming/weixindiancan_config.git
+          username: 895148716@qq.com
+          password: lmzmxz3403
+          basedir: G:\log\weixindiancai_app\config_3
+  ## rabbitmq config
+  rabbitmq:
+    host: 192.168.0.106
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+## 将bus-refresh等接口全部暴露出去
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

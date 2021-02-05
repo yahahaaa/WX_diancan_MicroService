@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: order
+
+  ## 用于定位github配置文件
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG  # 配置中心
+      profile: test11 # 环境
+      label: main # git分支
+
+    ## 自动刷新配置
+    bus:
+      id: ${spring.application.name}:${spring.cloud.config.profile}:${random.value}
+
+    stream:
+      bindings:
+        myMessage:
+          group: order # 不论启用多少个实例，将每个实例放入到一个组里，这样发送消息时，stream只会给一个实例发送消息
+          content-type: application/json
+
+#  ## 服务追踪配置
+#  zipkin:
+#    base-url: http://192.168.0.106:9411/
+#    sender:
+#      # 采用HTTP方式将span传输给zipkin，也可采用rabbitmq，可以保证高可用性
+#      type: web
+#  # 抽样的百分比，默认0.1
+#  sleuth:
+#    sampler:
+#      probability: 1
+
+## 日志权限
+logging:
+  level:
+    ## org.springframework.cloud.netflix.feign: debug
+    org.springframework.cloud.bus: debug
