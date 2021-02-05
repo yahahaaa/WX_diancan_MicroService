@@ -215,13 +215,120 @@ bus:
 
 ### 1.2 问题2
 
-问题 2 就是通过注解的方式增加事务失效的问题，其实这个问题以前也遇到过，这次是因为马虎忘掉了，特此记录下来
+问题 2 就是通过注解的方式增加事务失效的问题，下面是老师上课讲述的扣减库存源代码，扣减库存的方式在并发上来的时候可能会有问题，但是不是讨论的重点：
+
+项目中扣减库存的逻辑为通过传入购物车信息（商品ID和购买商品数量），首先查询商品是否存在，判断库存是否充足，然后更新库存，将操作数据库的逻辑和消息发送的逻辑分开，要等到所有的数据库操作完成后再发送消息。
+
+```java
+@Override
+public void decreaseStock(List<DecreaseStockInput> cartDTOList) {
+
+    //操作数据库，调用下面的方法
+    List<ProductInfo> productInfoList = decreaseStockProcess(cartDTOList);
+
+   	int a = 10 / 0;
+
+    //发送mq消,由订单服务接收消息，更改redis中存储的库存信息
+    //将productInfo转为productInfoOutput
+    List<ProductInfoOutput> results = productInfoList.stream().map(e -> {
+        ProductInfoOutput productInfoOutput = new ProductInfoOutput();
+        BeanUtils.copyProperties(e, productInfoOutput);
+        return productInfoOutput;
+    }).collect(Collectors.toList());
+    amqpTemplate.convertAndSend("productInfo", JsonUtil.toJson(results));
+}
+
+
+/**
+ * 扣减库存,高并发下先查库存然后再减库存有可能会发生超卖问题
+ * 将数据库扣减库存提取出来，因为这一段如果出错，数据库内容一起回滚，和mq的逻辑分开
+ * @param cartDTOList
+ */
+@Transactional
+public List<ProductInfo> decreaseStockProcess(List<DecreaseStockInput> cartDTOList){
+    List<ProductInfo> results = new ArrayList<>();
+    for (DecreaseStockInput cartDTO : cartDTOList) {
+        Optional<ProductInfo> productInfoOptional = productInfoRepository.findById(cartDTO.getProductId());
+        //判断商品是否存在
+        if (!productInfoOptional.isPresent()) {
+            throw new ProductException(ResultEnum.PRODUCT_NOT_EXIT);
+        }
+
+        /** TODO
+         * 下面这段代码在并发量高时可能会有超卖问题，
+         * 可以在redis中添加一个标志位，首先到redis标志位中判断是否存在，如果存在
+         * 使用数据库行锁 通过update语句，首先判断redis - quantity 是否大于0，大于0则更新库存的方式
+         * 如果数据库库存小于0不够了，发送消息，令订单服务将redis标志位置为false.
+         * 将TODO加入到 v2.0 版本
+         */
+        //判断库存是否足够
+        ProductInfo productInfo = productInfoOptional.get();
+        int result = productInfo.getProductStock() - cartDTO.getProductQuantity();
+        if (result < 0) {
+            throw new ProductException(ResultEnum.PRODUCT_STOCK_ERROR);
+        }
+
+        //更新库存
+        productInfo.setProductStock(result);
+        results.add(productInfo);
+        productInfoRepository.save(productInfo);
+    }
+    return results;
+}
+```
+
+上示代码中在添加 int a = 10 / 0 , 会在代码运行时抛出异常，此时按照一般理解，我已经在操作数据库的方法上添加了@Transactional注解，如果decreaseStock()方法出现异常，应该会回滚。
+
+但是，事实是数据库并不会回滚，则是由于通过注解的方式添加到方法上，会由动态代理生成一个新的方法对象，这个新的方法上才会具有事务功能，而我们在decreaseStock()方法中调用的decreaseStockProcess()的方法只是一个普通的方法，没有事务功能。所以若想解决这个问题，需要在decreaseStock()方法上同样加入@Transactional注解
 
 ### 1.3 问题3
 
 问题 3 是hystrix dashboard 在 windows 平台上无法正常使用的问题，捣鼓了半天，改了半天，结果部署到linux上就可以正常使用，可能是因为版本问题。
 
-## 3. 性能优化问题（看情况更新了）
+项目中采用hystrix做容灾处理，本项目中只针对多次访问超时的接口做了容灾降级处理，想要通过dashboard页面监控下，但是却总是
 
-## 4. Rancher 部署问题
+## 3. 服务追踪
+
+## 4. Rancher 部署
+
+## 5. graylog 搭建
+
+## 6. 下单优化
+
+在下单优化的时候，不能一味的追求极致的异步化，异步化虽然会显著提升性能，但是会导致代码逻辑复杂化，所以我逐步探索在我这种小型的项目中可以比较适宜的方法。
+
+我理解的优化方式有扣减库存先在哪执行，是先在redis中扣减库存再同步到数据库中，还是先扣减数据库中再同步到redis中；异步化的化，是异步化生成订单还是异步化扣减库存，还是全部异步化。如果是先扣减数据库内存再同步到redis，可提前判断库存不足的情况，但是对性能提升有限，需要用数据库乐观锁确保查询修改的原子性；如果是先扣减redis库存，需要用分布式锁确保redis查询修改的原子性，还需要保证数据库的最终一致性，不过最终一致性我们可以交由rabbitmq这种可靠性高的消息中间件，我们只需保证消息消费的幂等性。
+
+### 6.1. 版本1—基础版本
+
+- 调用商品服务通过商品id查询商品信息，若商品不存在抛出异常
+- 遍历商品信息，通过商品价格 * 商品数量计算每种商品的价钱，调用订单服务，订单详情入库
+- 调用商品服务扣减库存
+  - 遍历购物车，通过商品id查询商品信息。
+  - 判断库存是否充足，充足修改库存，返回成功，不充足抛出异常。
+
+- 调用订单服务订单入库
+
+### 6.2 版本2--先扣减数据库，异步方式同步redis
+
+- 调用商品服务查询商品信息，若商品不存在抛出异常
+- 首先遍历一遍商品信息，通过与redis中存储的库存信息进行比较，若商品数量不足直接抛出异常，若数量充足继续执行（即便由于网络问题导致订单服务消费端消息积压导致实际库存低于redis库存，也会在操作数据库的时候抛出异常）
+- 再遍历一遍商品信息，通过商品 价格 * 商品数量计算每种商品的价钱，调用订单服务，订单详情入库
+- 调用商品服务扣减库存
+  - 将操作数据库的代码单独成一个事务方法
+  - 通过乐观锁 update product_info set product_stock - productQuantity where product_id = product_id and product_stock - productQuantity >= 0 扣减库存
+  - 返回的结果表示成功修改的数据行数若等于购买商品数量则表示扣减成功，不等表示扣减失败，直接抛出异常
+  - 若所有的扣减库存操作成功，通过rabbitmq向订单服务发送消息，订单服务会修改redis库存信息
+- 扣减库存成功后订单入库
+
+### 6.3 版本3--先扣减redis库存，异步方式同步到数据库
+
+- 调用商品服务查询商品信息，若商品不存在抛出异常
+- 首先遍历一遍商品信息，在redis中扣减库存。扣减库存需注意，redis虽然是单线程操作的，但是我们需要先读取redis库存判断库存是否充足，然后再扣减redis库存，这一系列操作不能保证原子性，需要加锁，而普通的锁在水平扩展多台Tomcat服务器上无法使用，需要利用redis实现一个分布式锁，锁住这一些列操作。扣减库存后订单详情入库
+- 通过RabbitMQ发送消息到商品服务异步扣减库存（这里将订单ID一起发送，用于生成去重表主键id）
+  - RabbitMQ通过重试机制来保证可靠性，所以为了保证每条消息消费的幂等性，在每个消息消费时，通过订单id生成一个全局唯一主键值插入去重表，若重复消费，由主键的唯一性会抛出异常
+  - 扣减库存的方式依然采用上文乐观锁的方式，库存扣减成功后，通过openfeign调用订单接口修改订单状态。
+- 发送消息后直接将订单入库，不过需要新设置一个订单状态，当前订单状态为等待中，可以在前端给用户一个友好的等待界面，等待商品服务扣减数据库库存后修改订单状态为新订单后便跳转到支付接口。
+
+我在想，如果不设置等待状态，redis扣减库存后，发送消息，消息发送后直接订单入库跳转支付。需要想方法确保消息一定会被成功消费并且数据库成功扣减库存。不过这些超出我现在能力范围了，以后搞明白了再想想。
 
