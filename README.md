@@ -330,5 +330,5 @@ public List<ProductInfo> decreaseStockProcess(List<DecreaseStockInput> cartDTOLi
   - 扣减库存的方式依然采用上文乐观锁的方式
 - 发送消息后直接将订单入库，利用消息中间件的重发机制确保redis和数据库库存的最终一致性。
 
-**思考** 如果订单入库的时候失败回滚，如何回补redis的库存，如何回补数据库的库存
+**思考** 如果订单入库的时候失败回滚，如何回补数据库的库存。我另一个仓库中SecKill_Feasible_Plan中探讨了这个问题：使用RocketMQ这种具有事务机制的消息中间件，生产者在发送消息之前需要先执行executeLocalTransactional方法，当这个方法返回COMMIT时生产者才会真正的发送消息。所以利用这种机制，将生产订单扣减redis库存的逻辑放入到executeLocalTransactional方法中，当这个方法返回COMMIT时发出消息，扣减数据库库存
 
