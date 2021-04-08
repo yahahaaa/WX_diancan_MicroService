@@ -1,5 +1,11 @@
 # 基于SpringCloud的微信点餐系统
 
+图片显示不全需要在hosts文件手动指定图片解析地址
+
+项目架构图
+
+![image-20210205110338335](https://github.com/yahahaaa/picture/blob/main/Wechat-ordering-micro/%E9%A1%B9%E7%9B%AE%E6%9E%B6%E6%9E%84%E5%9B%BE.PNG?raw=true)**
+
 ## 1. 简述
 
 该项目是基于我功能完善单机版本的 https://github.com/yahahaaa/WX_diancan_Basic 项目扩展而来，在原来的版本上只保留核心功能，并将各个功能拆分为多个服务。结合我单机版本的微信点餐系统，采用了B2C模式，前后端分离架构。商品浏览页面（微信端）基于vue开发，商家后台页面（PC端）基于Thymeleaf模板引擎开发。对单机版本进行垂直扩展，采用微服务架构，**Basic** 版本的点餐系统卖家端实现微信网页授权登录、商品下单、微信JSAPI支付、取消订单、微信退款并探讨了秒杀的可行方案。卖家端实现微信扫码登录、商品类目增删、商品上下架、接单、查询订单和取消订单等功能。
@@ -288,10 +294,6 @@ public List<ProductInfo> decreaseStockProcess(List<DecreaseStockInput> cartDTOLi
 项目中采用hystrix做容灾处理，本项目中只针对多次访问超时的接口做了容灾降级处理，想要通过dashboard页面监控下，但是却总是
 
 ## 3. 服务追踪
-
-## 4. Rancher 部署
-
-## 5. graylog 搭建
 
 ## 6. 下单优化
 
