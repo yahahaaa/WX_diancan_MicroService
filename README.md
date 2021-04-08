@@ -4,7 +4,7 @@
 
 项目架构图
 
-![image-20210205110338335](https://github.com/yahahaaa/picture/blob/main/Wechat-ordering-micro/%E9%A1%B9%E7%9B%AE%E6%9E%B6%E6%9E%84%E5%9B%BE.PNG?raw=true)**
+![](https://github.com/yahahaaa/picture/blob/main/Wechat-ordering-micro/%E9%A1%B9%E7%9B%AE%E6%9E%B6%E6%9E%84%E5%9B%BE.PNG?raw=true)
 
 ## 1. 简述
 
