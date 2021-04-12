@@ -24,6 +24,8 @@ public class HystrixController {
 //    })
 
     //服务熔断（写入到配置项中）
+    //标志HystrixCommand后，application启动后会将所有标注该注解的方法生成一个代理对象后放入到Hystrix自己的线程池中
+    //当调用方法发生失败时，代理方法中的try catch处理异常时通过反射的方式执行fallback的方法
     @HystrixCommand(commandProperties = {
         @HystrixProperty(name = "circuitBreaker.enabled", value = "true"),  				//设置开启熔断
         @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"),	//请求数达到后才计算
