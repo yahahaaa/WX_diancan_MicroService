@@ -1,19 +1,59 @@
 spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://192.168.11.107:3306/springcloud_sell?serverTimezone=Asia/Shanghai&userUnicode=True&characterEncoding=utf-8&useSSL=false
+    # 配置Druid的其他参数，以下配置必须增加一个配置文件才能有效
+    # 初始化大小，最小，最大
+    initialSize: 5
+    minIdle: 10
+    maxActive: 152
+    # 获取连接等待超时的时间
+    maxWait: 6000
+    # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+    timeBetweenEvictionRunsMillis: 6000
+    # 配置一个连接在池中最小生存的时间，单位是毫秒
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: stat, wall
+    # 打开PSCache，并且指定每个连接上PSCache的大小
+    maxPoolPreparedStatementPerConnectionSize: 20
+    # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+    # 合并多个DruidDataSource的监控数据
+    useGlobalDataSourceStat: true
+
   application:
     name: product
-  cloud:
-    config:
-      discovery:
-        enabled: true
-        service-id: CONFIG
-      profile: dev
-      label: main
-
-    bus: ## 当前版本的小bug
-      id: ${spring.application.name}:${spring.cloud.config.profile}:${random.value}
+#  cloud:
+#    config:
+#      discovery:
+#        enabled: true
+#        service-id: CONFIG
+#      profile: dev
+#      label: main
+#    bus: ## 当前版本的小bug
+#      id: ${spring.application.name}:${spring.cloud.config.profile}:${random.value}
   redis:
-    port:
-    host:
+    host: 192.168.11.107
+    port: 5672
+    username: guest
+    password: guest
+  rabbitmq:
+    host: 192.168.11.107
+    port: 5672
+    username: guest
+    password: guest
+  jpa:
+    show-sql: true
+
 eureka:
   client:
     service-url:
@@ -22,3 +62,7 @@ eureka:
 logging:
   level:
     org.springframework.cloud.netflix.feign: debug
+
+## mybatis的xml地址
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
