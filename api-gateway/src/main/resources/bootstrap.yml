@@ -9,10 +9,12 @@ spring:
       profile: dev
       label: main
   rabbitmq:
-    host: 192.168.0.102
+    host: 192.168.11.107
     port: 5672
     username: guest
     password: guest
+
+
 eureka:
   client:
     service-url:
@@ -25,12 +27,12 @@ management:
         include: "*"
 
 ## 网关相关配置
-## /myProduct/product/list -> /product/product/list
+## /myProduct/product/list -> /product/product/list （/服务名/uri/）
 zuul:
   routes:
     myProduct:
       path: /myProduct/**
-      serviceId: product
+      serviceId: product # 服务名
       ## 敏感头过滤为空，防止过滤Cookie
       sensitiveHeaders:
     # 上面的简洁写法
@@ -43,10 +45,6 @@ zuul:
   sensitive-headers:
 
 ## 防止访问超时,将超时阈值设置的长一点,默认为1秒钟，由于首次启动类的懒加载可能会导致超时
-hystrix:
-  command:
-    default:
-      execution:
-        isolation:
-          thread:
-            timeoutInMilliseconds: 5000
+ribbon:
+  ReadTimeout: 5000
+  SocketTimeout: 5000

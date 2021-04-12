@@ -87,6 +87,8 @@ public class ProductController {
         return productService.findList(productIdList);
     }
 
+
+
     /**
      * 扣减库存
      * @param cartDTOList

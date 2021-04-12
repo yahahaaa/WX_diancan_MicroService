@@ -55,7 +55,7 @@ public class OrderController {
             throw new OrderException(ResultEnum.CART_IS_EMPTY);
         }
 
-        OrderDTO result = orderService.create(orderDTO);
+        OrderDTO result = orderService.create_02(orderDTO);
         Map<String,String> map = new HashMap<>();
         map.put("orderId",result.getOrderId());
 

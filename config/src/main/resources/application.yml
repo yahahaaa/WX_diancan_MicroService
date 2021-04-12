@@ -11,10 +11,10 @@ spring:
           uri: https://github.com/Leeeeeming/weixindiancan_config.git
           username: 895148716@qq.com
           password: lmzmxz3403
-          basedir: G:\log\weixindiancai_app\config_3
+          basedir: G:\log\weixindiancai_app\config_5
   ## rabbitmq config
   rabbitmq:
-    host: 192.168.0.106
+    host: 192.168.11.107
     port: 5672
     username: guest
     password: guest

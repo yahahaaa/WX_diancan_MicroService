@@ -79,8 +79,8 @@ public class LoginController {
 
         // 判断是否已经登录
         Cookie cookie = CookieUtil.get(request, CookieConstant.TOKEN);
-        if (cookie != null && !StringUtils.isEmpty(redisTemplate.opsForValue().get(String.format(RedisConstant.TOKEN_TEMPLATE,cookie.getValue())))){
-            return ResultVOUtil.success();
+            if (cookie != null && !StringUtils.isEmpty(redisTemplate.opsForValue().get(String.format(RedisConstant.TOKEN_TEMPLATE,cookie.getValue())))){
+                return ResultVOUtil.success();
         }
 
         //1. openid和数据库里的数据匹配

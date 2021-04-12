@@ -1,29 +1,99 @@
 spring:
+  datasource:
+    ## 数据库连接池配置
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://192.168.11.107:3306/springcloud_sell?serverTimezone=Asia/Shanghai&userUnicode=True&characterEncoding=utf-8&useSSL=false
+    initialSize: 5
+    minIdle: 10
+    maxActive: 152
+    # 获取连接等待超时的时间
+    maxWait: 6000
+    # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+    timeBetweenEvictionRunsMillis: 6000
+    # 配置一个连接在池中最小生存的时间，单位是毫秒
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: stat, wall
+    # 打开PSCache，并且指定每个连接上PSCache的大小
+    maxPoolPreparedStatementPerConnectionSize: 20
+    # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+    # 合并多个DruidDataSource的监控数据
+    useGlobalDataSourceStat: true
   application:
     name: order
+  jpa:
+    show-sql: true
+  rabbitmq:
+    host: 192.168.11.107
+    port: 5672
+    username: guest
+    password: guest
+  redis:
+    host: 192.168.11.107
+    port: 6379
 
-  ## 用于定位github配置文件
-  cloud:
+## 将该服务注册到注册中心
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+## 设置负载均衡配置
+ribbon:
+  ReadTimeout: 30000
+  ConnectTimeout: 30000
+## 日志权限
+logging:
+  level:
+    org.springframework.cloud.openfeign: debug
+    org.springframework.cloud.bus: debug
+
+## 设置feign的超时时间
+feign:
+  client:
     config:
-      discovery:
-        enabled: true
-        service-id: CONFIG  # 配置中心
-      profile: test11 # 环境
-      label: main # git分支
+      default:
+        #建立连接所用的时间，适用于网络状况正常的情况下，两端连接所需要的时间
+        ConnectTimeOut: 5000
+        #指建立连接后从服务端读取到可用资源所用的时间
+        ReadTimeOut: 5000
 
-    ## 自动刷新配置
-    bus:
-      id: ${spring.application.name}:${spring.cloud.config.profile}:${random.value}
 
-    stream:
-      bindings:
-        myMessage:
-          group: order # 不论启用多少个实例，将每个实例放入到一个组里，这样发送消息时，stream只会给一个实例发送消息
-          content-type: application/json
+#  /{name}-{profiles}.yml
+#  /{label}/{name}-{profiles}.yml
+#  name: 文件名，一般以服务名来命名
+#  profiles: 一般作为环境标识
+#  lable: 分支（branch），指定访问某分支下的配置文件
+#  cloud:
+#    config:
+#      discovery:
+#        enabled: true
+#        service-id: CONFIG  # 配置中心
+#      profile: dev # 环境
+#      label: main # git分支
+#    ## 自动刷新配置
+#    bus:
+#      i d: ${spring.application.name}:${spring.cloud.config.profile}:${random.value}
 
-#  ## 服务追踪配置
+
+#    stream:
+#      bindings:
+#        myMessage:
+#          group: order # 不论启用多少个实例，将每个实例放入到一个组里，这样发送消息时，stream只会给一个实例发送消息
+#          content-type: application/json
+
+
+  ## 服务追踪配置
 #  zipkin:
-#    base-url: http://192.168.0.106:9411/
+#    base-url: http://192.168.11.107:9411/
 #    sender:
 #      # 采用HTTP方式将span传输给zipkin，也可采用rabbitmq，可以保证高可用性
 #      type: web
@@ -32,8 +102,4 @@ spring:
 #    sampler:
 #      probability: 1
 
-## 日志权限
-logging:
-  level:
-    ## org.springframework.cloud.netflix.feign: debug
-    org.springframework.cloud.bus: debug
+
